@@ -37,7 +37,8 @@ ggplot(trips, aes(x = tripduration, color = usertype, fill = usertype)) +
     geom_histogram(bins = 50) +
     scale_x_log10(label = comma) +
     xlab('trip duration') +
-    ylab('frequency')
+    ylab('frequency') +
+    facet_wrap(~usertype)
 
 ggplot(trips, aes(x = tripduration, fill = usertype)) +
     geom_density(alpha = 0.6) +
@@ -100,8 +101,8 @@ trips_with_weather <- inner_join(trips, weather, by="ymd")
 # you'll need to summarize the trips and join to the weather data to do this
 trips$date_column <- as.Date(trips$date, format = "%Y-%m-%d")
 weather$date_column <- as.Date(weather$date, format = "%Y-%m-%d")
-t2 <- trips_with_weather |> group_by(date) |> summarize(trip_count = n())
-t2$date_column <- as.Date(t2$date, format = "%Y-%m-%d")
+t2 <- trips_with_weather |> group_by(date_column) |> summarize(trip_count = n())
+t2$date_column <- as.Date(t2$date_column, format = "%Y-%m-%d")
 t3 <- inner_join(t2,weather, by = "date_column")
 ggplot(t3, aes(x = tmin, y=trip_count)) +
     geom_point()
