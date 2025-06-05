@@ -89,7 +89,7 @@ n <- 100
 p0_hat <- replicate(1e5, estimate_coin_bias(n, p=0.5))
 
 # now conduct one experiment with 100 rolls from a biased coin
-p_hat <- estimate_coin_bias(n, p=0.3)
+p_hat <- estimate_coin_bias(n, p=0.3) #.29 I  think
 
 # plot the null distribution and see where the observed estimate lies in it
 ggplot(data.frame(p0_hat), aes(x = p0_hat)) +
