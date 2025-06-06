@@ -131,3 +131,31 @@ print(var_p0)
 
 #2.6.c im not sure its pretty high though idk what the scale is for the 
 #fail to reject the null hypothesis 
+mean(replicate(1e4, prop.test(x = sum(rbinom(100, 1, 0.51)), n = 100, alternative = "greater")$p.value <= 0.05))
+#for the record i think number 5 on the quiz is true
+
+#9.2 questions
+#we're looking for the confidence interval if both expected values are 3.5 using the test statistic given
+#in the question
+mu <- 3.5
+mu2 <- 3.5
+sig <- 3
+sig2 <- 3.5
+test_stat <- rep(0,10^5)
+se <- rep(0,10^5)
+for(i in 1:10^5)
+{
+  x1 <- rnorm(29,mu,sig)
+  x1_mean <- mean(x1)
+  x1_sig <- sd(x1)
+
+  x2 <- rnorm(21,mu2,sig2)
+  x2_mean <- mean(x2)
+  x2_sig <- sd(x2)
+
+  test_stat[i] = (x1_mean - x2_mean)/sqrt((x1_sig**2)/29 + (x2_sig**2)/21) 
+  se[i] = sqrt((x1_sig**2)/29 + (x2_sig**2)/21)
+}
+print(mean(test_stat))
+print(mean(se)*2)
+#i feel like its supposed to be +/- standard error but my answer is super different
