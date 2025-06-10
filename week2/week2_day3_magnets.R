@@ -159,3 +159,4 @@ for(i in 1:10^5)
 print(mean(test_stat))
 print(mean(se)*2)
 #i feel like its supposed to be +/- standard error but my answer is super different
+
