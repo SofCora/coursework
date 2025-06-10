@@ -53,3 +53,58 @@ predict(lm.fit,data.frame(lstat=c(5,10,15)), interval="prediction")
 #confidence interval uses the mean and standard deviation  from the dataset
 plot(lstat,medv)
 abline(lm.fit)
+plot(lstat,medv,pch="+")
+par(mfrow=c(2,2))
+plot(lm.fit)
+plot(predict(lm.fit), residuals(lm.fit))
+par(mfrow = c(1,1))
+plot(predict(lm.fit), residuals(lm.fit))
+
+plot(hatvalues(lm.fit)) #i think this plots the leverage how far that observation's preductor values are from the mean predictor values how much each value influences the final prediction
+which.max(hatvalues(lm.fit))
+#the least squares method is finding the best fit for a set of data points by minimizing the sum of the squares of the residuals
+#y=mx+b taking partial derivative for slope and intercept = 0 
+lm.fit = lm(medv ~ lstat + age, data = Boston)
+summary(lm.fit)
+
+lm.fit=lm(medv~., data = Boston)
+summary(lm.fit)
+
+summary(lm.fit)$r.sq
+#r^2 is .74 which means using all 13 features accounts for 74% of variation in the data. 74% less variation than if we just used the mean
+library(car)
+vif(lm.fit) #variance inflation factors -- how much the variation of a regression coefficient is inflated due to correltion with other predictors
+#if its really high then it means theres multicolinearity in some of the features which is bad because it makes them unstable they 
+#are basically the same and it makes the coeffiicents unreliable. 
+lm.fit1=lm(medv~-age, data=Boston) #all variables except for age because it has a very high p value according to summary(lm.fit)
+#p value for a coefficient tells you whether that particular predictor like age is statisticlally significnaly associated with response vairable after 
+#accounting for other variables in the model. we do not have strong evidence that age affects the response.
+#the observed coefficient could easily be due to chance if u fit the model just using age though the p value is super low
+#this indicates that theres colinearlty and that age isnt helpful when other variables are around it
+lm.fit1=update(lm.fit, ~.-age)
+
+#in the coeffifcent table, the t value tells you how mand se the estimated coeffiicent is away from 0
+#basically if the predictors effect is drastically different from 0. estimate/se large t value >2 means it has sig effect
+
+lm.fit2 = lm(medv~lstat+I(lstat^2))
+summary(lm.fit2)
+#we use anova() function to quantify the extent to which the quadratic fit is superior to linear, we know its better cuz p values are low
+lm.fit=lm(medv~lstat)
+anova(lm.fit,lm.fit2)
+
+#performs a hypothesis test with both models, the null hypothesis is that the 2 models fit the data equally well
+par(mfrow=c(2,2))
+plot(lm.fit2)
+lm.fit5=lm(medv ~ poly(lstat,5)) #5th degree polynomial linear function
+summary(lm.fit5)
+#you can also do a log transfomration for some reason idk
+ summary(lm(medv~log(rm),data=Boston))
+install.packages("ISLR")
+library(ISLR)
+fix(Carseats)
+names(Carseats)
+lm.fit=lm(Sales~.+Income:Advertising+Price:Age,data=Carseats)
+summary(lm.fit)
+contrasts()
+#returns the encoding R uses for shelveloc levels because its a factor variable
+#because when you look at the coefficients in summary(lm.fit) theres ShleveLocGood ShelveLocMedium shelvelocbad is just the default
