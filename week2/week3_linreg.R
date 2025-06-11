@@ -98,7 +98,7 @@ plot(lm.fit2)
 lm.fit5=lm(medv ~ poly(lstat,5)) #5th degree polynomial linear function
 summary(lm.fit5)
 #you can also do a log transfomration for some reason idk
- summary(lm(medv~log(rm),data=Boston))
+summary(lm(medv~log(rm),data=Boston))
 install.packages("ISLR")
 library(ISLR)
 fix(Carseats)
