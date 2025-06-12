@@ -35,6 +35,10 @@ head(ratings) %>% kable()
 
 ```{r dist-ratings}
 # plot the distribution of rating values https://speakerdeck.com/jhofman/modeling-social-data-lecture-2-introduction-to-counting?slide=26
+ggplot(ratings, aes(x = rating)) +
+    geom_histogram() +
+    xlab('rating') +
+    ylab('frequency')
 ```
 
 ## Per-movie stats
@@ -42,11 +46,18 @@ head(ratings) %>% kable()
 ```{r aggregate-by-movie}
 # aggregate ratings by movie, computing mean rating and number of ratings
 # hint: use the n() function for easy counting within a group
+ratings2 <- ratings |> group_by(movie_id) |> summarize(mean_rating = mean(rating), num_ratings = n())
+view(ratings2 |> head(n=100))
 ```
 
 ```{r dist-movie-popularity}
 # plot distribution of movie popularity (= number of ratings the movie received)
 # hint: try scale_x_log10() for a logarithmic x axis
+ggplot(ratings2, aes(x = num_ratings)) +
+    geom_bar() +
+    scale_x_log10()+
+    xlab('num ratings') +
+    ylab('freq')
 ```
 
 ```{r dist-mean-ratings-by-movie}
