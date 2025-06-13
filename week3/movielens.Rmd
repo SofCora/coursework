@@ -54,7 +54,7 @@ view(ratings2 |> head(n=100))
 # plot distribution of movie popularity (= number of ratings the movie received)
 # hint: try scale_x_log10() for a logarithmic x axis
 ggplot(ratings2, aes(x = num_ratings)) +
-    geom_bar() +
+    geom_histogram() +
     scale_x_log10()+
     xlab('num ratings') +
     ylab('freq')
@@ -63,13 +63,21 @@ ggplot(ratings2, aes(x = num_ratings)) +
 ```{r dist-mean-ratings-by-movie}
 # plot distribution of mean ratings by movie https://speakerdeck.com/jhofman/modeling-social-data-lecture-2-introduction-to-counting?slide=28
 # hint: try geom_histogram and geom_density
+ggplot(ratings2, aes(x=mean_rating)) +
+  geom_histogram() +
+  xlab('mean rating a movie got')
 ```
 
 ```{r cdf-movie-pop}
 # rank movies by popularity (number of ratings) and compute the cdf, or fraction of all views covered by the top-k movies https://speakerdeck.com/jhofman/modeling-social-data-lecture-2-introduction-to-counting?slide=30
 # hint: use dplyr's rank and arrange functions, and the base R sum and cumsum functions
-# store the result in a new data frame so you can use it in creating figure 2 from the paper below
-
+# store the result in a new data frame so you can use it in creating figure 2 from the paper belo
+ratings_ranked <- ratings2 |> mutate(Rank = rank(-num_ratings, ties.method="first")) |> arrange(Rank)
+ratings_cdf <- ratings_ranked |> mutate(cumsum = cumsum(num_ratings), cdf=cumsum/sum(num_ratings))
+view(ratings_cdf |> head(n=100))
+#in the case of ties whichever appears first in the dataset gets the lowest rank is how i did tie breakers
+ggplot(ratings_cdf, aes(x=Rank, y=cdf)) +
+  geom_line()
 # plot the CDF of movie popularity
 ```
 
@@ -78,11 +86,16 @@ ggplot(ratings2, aes(x = num_ratings)) +
 
 ```{r aggregate-by-user}
 # aggregate ratings by user, computing mean and number of ratings
+ratings_users <- ratings |> group_by(user_id) |> summarize(mean_rating = mean(rating), num_ratings = n())
+view(ratings_users |> head(n=100))
 ```
 
 ```{r dist-user-activity}
 # plot distribution of user activity (= number of ratings the user made)
 # hint: try a log scale here
+ggplot(ratings_users, aes(x=num_ratings)) +
+  geom_histogram() +
+  scale_x_log10()
 ```
 
 # Anatomy of the long tail
@@ -102,4 +115,65 @@ ggplot(ratings2, aes(x = num_ratings)) +
 # paper, produce one curve for the 100% user satisfaction level and
 # another for 90%---do not, however, bother implementing the null
 # model (shown in the dashed lines).
+view(ratings_users |> arrange(num_ratings) |> head(n=500))
+
+#i gotta join ratings with ratings_ranked
+movie_rankings <- ratings_ranked
+ratings_joined <- left_join(ratings, ratings_ranked, by="movie_id")
+ratings2 <- ratings_joined |> group_by(user_id) |> summarize(weirdest_movie_rank = max(Rank))
+
+movie_count <- movie_rankings |> summarize(count = n()) |> pull(count) 
+user_count <- ratings_users |> summarize(count = n()) |> pull(count)
+df_final <- tibble(inventory_size = seq_len(movie_count)) # to get the inventory size from 1-10677 which is the number of movies in the dataset
+#for i in inventory_size:
+#   num_of_users whose weirdest_rank < i / total_num_users
+satisfied_percentages <- rep(0,movie_count)
+for (i in 1:movie_count){
+  satisfied_percentages[i] <- pull(ratings2 |> filter(weirdest_movie_rank < i) |> summarize(count = n())) / user_count 
+}
+df_final <- tibble(inventory_size = seq_len(movie_count), satisfied_percentages = satisfied_percentages)
+
+
+
+
+
+#this is how u do it without a for loop much quicker slay
+
+ratings2 <- ratings2 |> arrange(weirdest_movie_rank)
+ratings2 <- ratings2 |> group_by(weirdest_movie_rank) |> summarize(num_users_per_rank = n())
+ratings2 <- ratings2 |> mutate(fraction_of_users_satisfied = num_users_per_rank/user_count)
+ratings2 <- ratings2 |> mutate(cumsum_satisfied = cumsum(fraction_of_users_satisfied))
+ratings2 <- ratings2 |> mutate(row_num = row_number())
+ggplot(ratings2, aes(x=row_num, y=cumsum_satisfied)) +
+  geom_line()
+
+
+###practice###
+#for (i in 100:103){
+ # print(pull(ratings2 |> filter(weirdest_movie_rank < i) |> summarize(count=n())))
+#}
+#theres 10677 movies got that by count = n() for ratings_ranked dataframe...
+#ratings_ranked <- ratings2 |> mutate(Rank = rank(-num_ratings, ties.method="first")) |> arrange(Rank)
+#ratings_cdf <- ratings_ranked |> mutate(cumsum = cumsum(num_ratings), cdf=cumsum/sum(num_ratings))
+#view(ratings_cdf |> head(n=100))
+#in the case of ties whichever appears first in the dataset gets the lowest rank is how i did tie breakers
+#ggplot(ratings_cdf, aes(x=Rank, y=cdf)) +
+ # geom_line()
 ```
+
+```{r long-tail-90}
+#get the 90% satisfaction rate curve thing
+ratings3 <- ratings_joined |> arrange(user_id, Rank)
+ratings3 <- ratings3 |> group_by(user_id) |> slice_head(prop = 0.9)
+#then get the max
+ratings3 <- ratings3 |> group_by(user_id) |> summarize(weirdest_90_movie_rank = max(Rank))
+ratings3 <- ratings3 |> group_by(weirdest_90_movie_rank) |> summarize(num_users_per_rank = n())
+ratings3 <- ratings3 |> mutate(fraction_of_users_satisfied = num_users_per_rank/user_count)
+ratings3 <- ratings3 |> mutate(cumsum_satisfied = cumsum(fraction_of_users_satisfied))
+ratings3 <- ratings3 |> mutate(row_num = row_number())
+ggplot(ratings3, aes(x=row_num, y=cumsum_satisfied)) +
+  geom_line()
+
+```
+
+# Im not combining them sorry lmaoo :)
