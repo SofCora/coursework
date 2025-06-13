@@ -171,7 +171,7 @@ ratings3 <- ratings3 |> group_by(weirdest_90_movie_rank) |> summarize(num_users_
 ratings3 <- ratings3 |> mutate(fraction_of_users_satisfied = num_users_per_rank/user_count)
 ratings3 <- ratings3 |> mutate(cumsum_satisfied = cumsum(fraction_of_users_satisfied))
 ratings3 <- ratings3 |> mutate(row_num = row_number())
-ggplot(ratings3, aes(x=row_num, y=cumsum_satisfied)) +
+ggplot(ratings3, aes(x=weirdest_90_movie_rank, y=cumsum_satisfied)) +
   geom_line()
 
 ```
